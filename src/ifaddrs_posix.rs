@@ -25,7 +25,8 @@ pub fn do_broadcast(ifaddr: &ifaddrs) -> Option<IpAddr> {
     target_os = "ios",
     target_os = "macos",
     target_os = "openbsd",
-    target_os = "netbsd"
+    target_os = "netbsd",
+    target_os = "illumos"
 ))]
 pub fn do_broadcast(ifaddr: &ifaddrs) -> Option<IpAddr> {
     sockaddr::to_ipaddr(ifaddr.ifa_dstaddr)
@@ -38,16 +39,15 @@ pub struct IfAddrs {
 impl IfAddrs {
     #[allow(unsafe_code, clippy::new_ret_no_self)]
     pub fn new() -> io::Result<Self> {
-        let mut ifaddrs: *mut ifaddrs;
+        let mut ifaddrs = mem::MaybeUninit::uninit();
 
         unsafe {
-            ifaddrs = mem::uninitialized();
-            if -1 == getifaddrs(&mut ifaddrs) {
+            if -1 == getifaddrs(ifaddrs.as_mut_ptr()) {
                 return Err(io::Error::last_os_error());
             }
         }
 
-        Ok(Self { inner: ifaddrs })
+        Ok(Self { inner: unsafe { ifaddrs.assume_init() }})
     }
 
     pub fn iter(&self) -> IfAddrsIterator {

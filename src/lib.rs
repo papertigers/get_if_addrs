@@ -18,7 +18,7 @@ maidsafe_logo.png",
 // For explanation of lint checks, run `rustc -W help` or see
 // https://github.com/maidsafe/QA/blob/master/Documentation/Rust%20Lint%20Checks.md
 #![forbid(
-    exceeding_bitshifts,
+    arithmetic_overflow,
     mutable_transmutes,
     no_mangle_const_items,
     unknown_crate_types,
@@ -31,7 +31,6 @@ maidsafe_logo.png",
     missing_docs,
     non_shorthand_field_patterns,
     overflowing_literals,
-    plugin_as_library,
     stable_features,
     unconditional_recursion,
     unknown_lints,
@@ -386,7 +385,6 @@ pub fn get_if_addrs() -> io::Result<Vec<Interface>> {
 #[cfg(test)]
 mod tests {
     use super::{get_if_addrs, Interface};
-    use std::error::Error;
     use std::io::Read;
     use std::net::{IpAddr, Ipv4Addr};
     use std::process::{Command, Stdio};
@@ -402,7 +400,7 @@ mod tests {
         };
         let mut process = match start_cmd {
             Err(why) => {
-                println!("couldn't start cmd {} : {}", cmd, why.description());
+                println!("couldn't start cmd {} : {}", cmd, why);
                 return "".to_string();
             }
             Ok(process) => process,
@@ -452,7 +450,7 @@ mod tests {
             .collect()
     }
 
-    #[cfg(any(target_os = "freebsd", target_os = "macos", target_os = "ios"))]
+    #[cfg(any(target_os = "freebsd", target_os = "macos", target_os = "ios", target_os = "illumos"))]
     fn list_system_addrs() -> Vec<IpAddr> {
         list_system_interfaces("ifconfig", "")
             .lines()
